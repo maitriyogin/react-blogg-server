@@ -1,2 +1,2 @@
 # react-blogg-server
-Node - Redux server for the bloggs app
+React bloggs server is a redux server for the bloggs client.
