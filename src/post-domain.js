@@ -6,7 +6,7 @@ import {List, Map} from 'immutable';
 export const INITIAL_STATE = Map();
 
 export function setData(state, data) {
-    console.log('----- setData, data :'+ JSON.stringify(data, null, 2));
+    console.log('----- setData, data :');
     if(data != null){
             state = setPosts(state, data.get('posts'));
 
@@ -14,7 +14,7 @@ export function setData(state, data) {
 
             state = setUsers(state, data.get('users'));
     }
-    console.log('----- setData, new state: ' + JSON.stringify(state, null, 2));
+    console.log('----- setData, new state: ');
     return state;
 }
 
@@ -31,31 +31,51 @@ export function setUsers(state, users) {
 }
 
 export function updateUser(state, user) {
-    return state.set('users', utils.updateList(state.get('users'),user));
+    return state.set('users', utils.updateList(utils.getList(state,'users'),user));
 }
 
 export function updatePost(state, post) {
-    return state.set('posts', utils.updateList(state.get('posts'),post));
+    return state.set('posts', utils.updateList(utils.getList(state,'posts'),post));
 }
 
 export function updateComment(state, comment) {
-    return state.set('comments', utils.updateList(state.get('comments'),comment));
+    let comments = utils.updateList(utils.getList(state,'comments'),comment);
+    if(comments == null){
+        return state;
+    }
+    let newState = state.set('comments', comments);
+    comment = comments.last();
+    // now add the comment to the posts comments fks
+    let post = utils.getItem(state, 'posts', comment.get('post'));
+    post = post.set('comments', post.get('comments').push(comment.get('_id')));
+    newState = updatePost(newState, post);
+    console.log('new state after add comment: ' + JSON.stringify(newState, null, 2));
+    return newState;
 }
 
 export function deleteUser(state, id) {
-    return state.set('users', utils.deleteItem(state.get('users'),id));
+    return state.set('users', utils.deleteItem(utils.getList(state,'users'),id));
 }
 
 export function deletePost(state, id) {
-    return state.set('posts', utils.deleteItem(state.get('posts'),id));
+    return state.set('posts', utils.deleteItem(utils.getList(state,'posts'),id));
 }
 
 export function deletePost(state, id) {
-    return state.set('posts', utils.deleteItem(state.get('posts'),id));
+    return state.set('posts', utils.deleteItem(utils.getList(state,'posts'),id));
 }
+
 
 // utility functions
 export const utils = {
+    getItem : (state,listName, id) => {
+        let list = state.get(listName);
+        if(list == null){
+            return;
+        }
+        let i = utils.getIndex(list, id);
+        return list.get(i);
+    },
     getIndex: (list, id) => {
         return list.findIndex(
                 val => {
@@ -64,6 +84,13 @@ export const utils = {
         );
     },
     updateList: (list, item) => {
+        console.log('------ updateList item:' + Map.isMap(item) + JSON.stringify(item, null, 2));
+        if(item == null){
+            return list;
+        }
+        if(!Map.isMap(item)){
+            item = Map(item);
+        }
         let id = item.get('_id');
         if(id > -1) {
             let i = utils.getIndex(list, id);
@@ -80,6 +107,14 @@ export const utils = {
         let i = utils.getIndex(list, id);
         if(i > -1){
             return list.delete(i);
+        } else {
+            return list;
+        }
+    },
+    getList : (state, listName) => {
+        let list = state.get(listName);
+        if(list == null || list.size == 0){
+            return List.of();
         } else {
             return list;
         }

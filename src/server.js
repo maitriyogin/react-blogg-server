@@ -19,6 +19,7 @@ export default function startServer(store) {
     );
 
     io.on('connection', (socket) => {
+        console.log('New connection!')
         // emmit the current state of the store on connection
         socket.emit('state', store.getState().toJS());
         // receive updates from the clients, voters will be assigning votes

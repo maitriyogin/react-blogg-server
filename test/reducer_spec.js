@@ -48,4 +48,16 @@ describe('reducer', () => {
         expect(us.get('posts').size).to.equal(4);
         expect(us.get('posts').get(3).get('_id')).to.equal(4);
     });
+
+    it('can add a new comment', () => {
+        const action = {
+            type: 'ADD_COMMENT',
+            comment: Map({body: 'this is a new comment', date: new Date(), post: 1, user: 3})
+        }
+        // will init the store with the initial state
+        const nextState = reducer(undefined, undefined);
+        const us = reducer(nextState, action);
+        expect(us.get('comments').size).to.equal(7);
+        expect(us.get('comments').get(6).get('body')).to.equal('this is a new comment');
+    });
 });
