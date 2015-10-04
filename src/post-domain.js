@@ -65,6 +65,12 @@ export function deletePost(state, id) {
     return state.set('posts', utils.deleteItem(utils.getList(state,'posts'),id));
 }
 
+export function updatePostText(state, postId, text){
+    // get the post
+    let post = utils.getItem(state,'posts', postId);
+    post = post.set('body', text);
+    return state.set('posts', utils.updateList(utils.getList(state,'posts'),post));
+}
 
 // utility functions
 export const utils = {

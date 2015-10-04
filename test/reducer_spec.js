@@ -37,6 +37,18 @@ describe('reducer', () => {
         expect(us.get('posts').get(0).get('body')).to.equal('Angular Rocks!');
     });
 
+    it('can update an existing posts text', () => {
+        const action = {
+            type: 'UPDATE_POST_TEXT',
+            postId: 1,
+            postText : 'lovely!'
+        }
+        // will init the store with the initial state
+        const nextState = reducer(undefined, undefined);
+        const us = reducer(nextState, action);
+        expect(us.get('posts').get(0).get('body')).to.equal('lovely!');
+    });
+
     it('can add a new post', () => {
         const action = {
             type: 'UPDATE_POST',
