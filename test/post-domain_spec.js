@@ -122,6 +122,31 @@ describe('application logic', () => {
             expect(ul.size).to.equal(4);
         })
 
+        it('can create a new empty user', () =>{
+            const users = List.of(
+              Map({_id:1,username : 'stephen',email:'stephen.white@callistaenterprise.se', posts : List.of(1), comments : List.of(3, 4)}),
+              Map({_id:2,username : 'sedina',email:'sedina.oruc@callistaenterprise.se', posts: List.of(2), comments : List.of(5, 6)}),
+              Map({_id:3,username : 'jonas',email:'jonas.behmer@callistaenterprise.com', posts: List.of(3), comments : List.of(1, 2)})
+            );
+
+            let state = Map({});
+
+            state = setUsers(state,users);
+
+            let user = null;
+
+            let newState = updateUser(state, user);
+
+            let ul = newState.getIn(['users']);
+
+            ////console.log('new user list : ' + JSON.stringify(ul, null, 2));
+
+            expect(ul.get(3).get('username')).to.equal('');
+            expect(ul.get(3).get('email')).to.equal('');
+            expect(ul.get(3).get('_id')).to.equal(4);
+            expect(ul.size).to.equal(4);
+        })
+
         it('can delete a user from the state', () =>{
             const users = List.of(
                 Map({_id:1,username : 'stephen',email:'stephen.white@callistaenterprise.se', posts : List.of(1), comments : List.of(3, 4)}),

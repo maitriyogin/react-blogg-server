@@ -6,7 +6,6 @@ import {List, Map} from 'immutable';
 export const INITIAL_STATE = Map();
 
 export function setData(state, data) {
-    console.log('----- setData, data :');
     if(data != null){
             state = setPosts(state, data.get('posts'));
 
@@ -14,7 +13,6 @@ export function setData(state, data) {
 
             state = setUsers(state, data.get('users'));
     }
-    console.log('----- setData, new state: ');
     return state;
 }
 
@@ -31,6 +29,18 @@ export function setUsers(state, users) {
 }
 
 export function updateUser(state, user) {
+    //console.log(JSON.stringify(state, null, 2));
+    console.log('---- updateUser' + JSON.stringify(user, null, 2));
+    if(user == null){
+        // create a new emtpy user
+        user = Map({
+            username: '',
+            email: '',
+            posts: List.of(),
+            comments: List.of()
+        })
+    }
+
     return state.set('users', utils.updateList(utils.getList(state,'users'),user));
 }
 
@@ -49,7 +59,7 @@ export function updateComment(state, comment) {
     let post = utils.getItem(state, 'posts', comment.get('post'));
     post = post.set('comments', post.get('comments').push(comment.get('_id')));
     newState = updatePost(newState, post);
-    console.log('new state after add comment: ' + JSON.stringify(newState, null, 2));
+    //console.log('new state after add comment: ' + JSON.stringify(newState, null, 2));
     return newState;
 }
 

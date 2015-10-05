@@ -15,11 +15,14 @@ export default function reducer(state = postDomain.INITIAL_STATE, action = {type
         state = postDomain.updateComment(state, action.comment);
         break;
     case 'UPDATE_POST_TEXT':
-        console.log(JSON.stringify(action, null, 2));
         state = postDomain.updatePostText(state, action.postId, action.postText);
-        console.log('-------- state: ' + JSON.stringify(state, null, 2));
+        break;
+    case 'UPDATE_USER':
+        console.log(JSON.stringify(action, null, 2));
+        state = postDomain.updateUser(state, action.user);
         break;
     }
+    //console.log('***** new state :' + JSON.stringify(state, null, 2) );
     // if the reducer doesn't have the action it just returns the current state.
     return state;
 }
