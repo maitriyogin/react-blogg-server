@@ -45,6 +45,7 @@ export function updateUser(state, user) {
 }
 
 export function updatePost(state, post) {
+    console.log('---- 4. post domain updates the post');
     return state.set('posts', utils.updateList(utils.getList(state,'posts'),post));
 }
 
@@ -100,7 +101,7 @@ export const utils = {
         );
     },
     updateList: (list, item) => {
-        console.log('------ updateList item:' + Map.isMap(item) + JSON.stringify(item, null, 2));
+        //console.log('------ updateList item:' + Map.isMap(item) + JSON.stringify(item, null, 2));
         if(item == null){
             return list;
         }

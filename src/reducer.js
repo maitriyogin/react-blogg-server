@@ -3,13 +3,16 @@ import * as postDomain from './post-domain';
 import data from '../data';
 
 export default function reducer(state = postDomain.INITIAL_STATE, action = {type:'SET_DATA', data:data} ) {
-    console.log('***** about to :' + action.type );
+    console.log('***** reducer will : ' + action.type );
     switch (action.type) {
     case 'SET_DATA':
         state = postDomain.setData(state, action.data);
         break;
     case 'UPDATE_POST':
+        console.log('---- 3. store calls the reducer with : ' + action.type);
         state = postDomain.updatePost(state, action.post);
+
+        console.log('---- 6. store updates its state from the domain');
         break;
     case 'ADD_COMMENT':
         state = postDomain.updateComment(state, action.comment);
