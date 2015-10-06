@@ -8,6 +8,9 @@ export default function reducer(state = postDomain.INITIAL_STATE, action = {type
     case 'SET_DATA':
         state = postDomain.setData(state, action.data);
         break;
+    case 'RESET_STATE':
+        state = postDomain.setData(state, data);
+        break;
     case 'UPDATE_POST':
         console.log('---- 3. store calls the reducer with : ' + action.type);
         state = postDomain.updatePost(state, action.post);
