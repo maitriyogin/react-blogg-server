@@ -10,8 +10,12 @@ import Server from 'socket.io';
  7. all connected clients - inlcuding the one that initiated the original action - receive the new state
  **/
 
+var port = process.env.PORT || 8090
+
+console.log('Websocket port : ' + port);
+
 export default function startServer(store) {
-    const io = new Server().attach(8090);
+    const io = new Server().attach(port);
 
     // 6.
     store.subscribe(
