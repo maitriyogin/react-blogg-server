@@ -4,15 +4,23 @@ module.exports = function(app, adapter) {
 
 
   usersRouter.get('/', function(req, res) {
-    adapter.find('users', req.query, res);
+    adapter.find('users', req.query, res).then((val)=>{
+      res.send(val)
+    }).catch((val)=>{
+      res.send(val)
+    });
   });
 
   usersRouter.get('/:id?', function(req, res) {
-    adapter.findById('users',req.params.id, res);
+    adapter.findById('users',req.params.id, res).then((val)=>{
+      res.send(val)
+    });
   });
 
   usersRouter.post('/', function(req, res) {
-    adapter.post('users', res, req.body.user);
+    adapter.post('users', res, req.body.user).then((val)=>{
+      res.send(val)
+    });
   });
 
   usersRouter.delete('/:id', function(req, res) {
@@ -20,7 +28,9 @@ module.exports = function(app, adapter) {
   });
 
   usersRouter.put('/:id', function(req, res) {
-    adapter.put('users',  res, req);
+    adapter.put('users',  res, req).then((val)=>{
+      res.send(val)
+    });
   });
 
   app.use('/api/users', usersRouter);

@@ -1,0 +1,241 @@
+import * as _ from 'underscore';
+
+import {
+  GraphQLList,
+  GraphQLObjectType,
+  GraphQLSchema,
+  GraphQLString,
+  GraphQLInt,
+  GraphQLFloat,
+  GraphQLEnumType,
+  GraphQLNonNull
+} from 'graphql';
+
+const adapter = require('./adapter')();
+
+const User = new GraphQLObjectType({
+  name: 'User',
+  description: 'Represent the type of a user of a blog post or a comment',
+  fields: () => ({
+    _id: {type: GraphQLString},
+    username: {type: GraphQLString},
+    email: {type: GraphQLString},
+    posts: {
+      type: new GraphQLList(Post),
+      resolve(parent, args){
+        var query = {userfk:parent._id};
+        return adapter.find('posts', query).then((posts)=>{
+          console.log(JSON.stringify(posts));
+          var posts = posts && posts.posts ? posts.posts : null;
+          console.log(JSON.stringify(posts));
+          return posts;
+        })
+      }
+    }
+  })
+});
+
+const Post = new GraphQLObjectType({
+  name: 'Post',
+  description: 'Represent the type of a post',
+  fields: () => ({
+    _id: {type: GraphQLString},
+    title: {type: GraphQLString},
+    body: {type: GraphQLString},
+    user:{
+      type:User,
+      resolve(parent, args){
+        //console.log(JSON.stringify('user args:' + JSON.stringify(parent)));
+        return adapter.findById('users', parent.userfk).then((users)=>{
+          //console.log(JSON.stringify(users));
+          var user = users && users.users && users.users.length > 0 ? users.users[0] : null;
+          //console.log(JSON.stringify(user));
+          return user;
+        })
+      }
+    },
+    comments: {
+      type: new GraphQLList(Comment),
+      resolve(parent, args){
+        var query = {postfk:parent._id};
+        return adapter.find('comments', query).then((comments)=>{
+          var comments = comments && comments.comments ? comments.comments : null;
+          return comments;
+        })
+      }
+    }
+  })
+});
+
+const Comment = new GraphQLObjectType({
+  name: 'Comment',
+  description: 'Represent the type of a Comment on a post of a User',
+  fields: () => ({
+    _id: {type: GraphQLString},
+    body: {type: GraphQLString},
+    updatedate: {type: GraphQLString},
+    user:{
+      type:User,
+      resolve(parent, args){
+        //console.log(JSON.stringify('user args:' + JSON.stringify(parent)));
+        return adapter.findById('users', parent.userfk).then((users)=>{
+          //console.log(JSON.stringify(users));
+          var user = users && users.users && users.users.length > 0 ? users.users[0] : null;
+          //console.log(JSON.stringify(user));
+          return user;
+        })
+      }
+    },
+    post:{
+      type:Post,
+      resolve(parent, args){
+        return adapter.findById('posts', parent.postfk).then((posts)=>{
+          var post = posts && posts.posts && posts.posts.length > 0 ? posts.posts[0] : null;
+          return post;
+        })
+      }
+    }
+  })
+});
+
+const Query = new GraphQLObjectType({
+  name: "Queries",
+  fields: {
+    users: {
+      type: new GraphQLList(User),
+      args: {
+        _id: {
+          name: '_id',
+          type: GraphQLInt
+        },
+        username: {
+          name: 'username',
+          type: GraphQLString
+        },
+        email: {
+          name: 'email',
+          type: GraphQLString
+        }
+      },
+      resolve: function(rootValue, args, info) {
+        let fields = {};
+        let fieldASTs = info.fieldASTs;
+        console.log(JSON.stringify(args,null,2))
+        fieldASTs[0].selectionSet.selections.map(function(selection) {
+          fields[selection.name.value] = 1;
+        });
+        return adapter.find('users', args).then((users)=>{
+          console.log(JSON.stringify(users));
+          return users.users;
+        })
+      }
+    },
+    posts: {
+      type: new GraphQLList(Post),
+      args: {
+        _id: {
+          name: '_id',
+          type: GraphQLInt
+        },
+        title: {
+          name: 'title',
+          type: GraphQLString
+        },
+        body: {
+          name: 'body',
+          type: GraphQLString
+        }
+      },
+      resolve: function(rootValue, args, info) {
+        let fields = {};
+        let fieldASTs = info.fieldASTs;
+        console.log(JSON.stringify(args,null,2))
+        fieldASTs[0].selectionSet.selections.map(function(selection) {
+          fields[selection.name.value] = 1;
+        });
+        return adapter.find('posts', args).then((posts)=>{
+          console.log(JSON.stringify(posts));
+          return posts.posts;
+        })
+      }
+    },
+    comments: {
+      type: new GraphQLList(Comment),
+      args: {
+        _id: {
+          name: '_id',
+          type: GraphQLInt
+        },
+        body: {
+          name: 'body',
+          type: GraphQLString
+        }
+      },
+      resolve: function(rootValue, args, info) {
+        let fields = {};
+        let fieldASTs = info.fieldASTs;
+        console.log(JSON.stringify(args,null,2))
+        fieldASTs[0].selectionSet.selections.map(function(selection) {
+          fields[selection.name.value] = 1;
+        });
+        return adapter.find('comments', args).then((comments)=>{
+          console.log(JSON.stringify(comments));
+          return comments.comments;
+        })
+      }
+    }
+  }
+});
+
+const Mutation = new GraphQLObjectType({
+  name: "Mutations",
+  fields: {
+    updateUser: {
+      type: User,
+      args: {
+        _id: {
+          name: '_id',
+          type: GraphQLInt
+        },
+        username: {
+          name: 'username',
+          type: GraphQLString
+        },
+        email: {
+          name: 'email',
+          type: GraphQLString
+        }
+      },
+      resolve: function(rootValue, args) {
+        let user = _.clone(args);
+        let req = {body:{users:user}};
+        return adapter.put('users', null, req).then((auser) => auser);
+      }
+    },
+    createUser: {
+      type: User,
+      args: {
+        username: {
+          name: 'username',
+          type: new GraphQLNonNull(GraphQLString)
+        },
+        email: {
+          name: 'email',
+          type: GraphQLString
+        }
+      },
+      resolve: function(rootValue, args) {
+        let user = _.clone(args);
+        let req = {body:{users:user}};
+        return adapter.post('users', null, req).then((auser) => auser);
+      }
+    }
+  }
+});
+
+const Schema = new GraphQLSchema({
+  query: Query,
+  mutation: Mutation
+});
+
+export default Schema;

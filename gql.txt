@@ -1,0 +1,12 @@
+query{
+  users{
+    username
+  }
+}
+
+mutation{
+  updateUser(_id:13,username:"fredxxx"){
+    _id,
+    username
+  }
+}

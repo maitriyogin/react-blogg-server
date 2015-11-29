@@ -9,7 +9,7 @@ module.exports = function(app,adapter) {
   });
   dataRouter.get('/reset', function(req, res) {
     adapter.clean(data.data, res);
-    adapter.insertAll(data);
+    adapter.insertAll(data.data);
     res.send('ok');
   });
   dataRouter.get('/insertAll', function(req, res) {

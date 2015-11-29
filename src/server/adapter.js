@@ -1,8 +1,13 @@
-module.exports = function(env) {
-  var pg = require('pg');
+module.exports = function() {
 
+  var connectionString = process.env.NODE_ENV === 'production' ?
+    process.env.DATABASE_URL :
+    'pg://stephenwhite:5432@localhost/stephenwhite';
+
+  var pg = require('pg');
+  var Promise = require('promise');
   var insertSql = function(tableName, payload, method) {
-    console.log("payload" + JSON.stringify(payload));
+    console.log("payload" +tableName + ', ' + JSON.stringify(payload));
     var _id;
 
     if (method == 'post' && payload._id !== undefined) {
@@ -12,12 +17,14 @@ module.exports = function(env) {
     // create update
     var columns = '(';
     var values = ' VALUES(';
+    var returning = '_id,';
     var i = 0;
     for (var property in payload) {
       if (payload.hasOwnProperty(property)) {
         if (i > 0) {
           values += ',';
           columns += ',';
+          returning += ',';
         }
         i++;
         var val = payload[property];
@@ -28,38 +35,43 @@ module.exports = function(env) {
         }
 
         columns += property;
+        returning += property;
       }
     }
     values += ')';
     columns += ')';
 
     var sql = 'INSERT INTO ' + tableName + ' ' + columns + values;
+    sql += ' RETURNING ' + returning;
+
     console.log('post sql : ' + sql);
     return sql;
   }
-
-  return {
-    findById: function(name, id, res) {
-
-      pg.connect(env.connectionString, function(err, client, done) {
-
+  var findById = function(name, id, res) {
+    return new Promise((resolve, reject) => {
+      pg.connect(connectionString, function(err, client, done) {
         client.query('SELECT * FROM ' + name + ' WHERE _id=' + id, function(err, result) {
           done();
           var ret = {};
           if (err) {
             console.error(err);
-            res.send("Error " + err);
+            resolve(err);
           }
           else {
             ret[name] = result.rows;
-            res.send(ret);
+            resolve(ret);
           }
         });
       });
-    },
+    });
+  }
+
+  return {
+    findById: findById,
 
     find: function(name, query, res) {
       var qs = '';
+      if(!query) query = {};
       // convert query into sql, should be name values
       console.log('query : ' + JSON.stringify(query, null, 2));
       var i = 0;
@@ -79,24 +91,28 @@ module.exports = function(env) {
       }
       qs = 'SELECT * FROM ' + name + qs;
       console.log('find : ' + qs);
-      pg.connect(env.connectionString, function(err, client, done) {
-        try {
-          client.query(qs, function(err, result) {
-            done();
-            var ret = {};
-            if (err) {
-              console.error(err);
-              res.send("Error " + err);
-            }
-            else {
-              ret[name] = result.rows;
-              res.send(ret);
-            }
-          });
-        } catch (err) {
-          console.error(err);
-          res.send("Error " + err);
-        }
+      return new Promise((resolve, reject) =>
+      {
+        pg.connect(connectionString, function(err, client, done) {
+          try {
+            client.query(qs, function(err, result) {
+              done();
+              var ret = {};
+              if (err) {
+                console.error(err);
+                reject(err)
+              }
+              else {
+                ret[name] = result.rows;
+                resolve(ret)
+              }
+            });
+          } catch (err) {
+            console.error(err);
+            reject(err)
+          }
+        });
+
       });
     },
 
@@ -106,6 +122,7 @@ module.exports = function(env) {
         var payload = req.body[name];
         console.log("payload" + JSON.stringify(payload));
         var _id;
+        var that = this;
         if (payload._id !== undefined) {
           _id = payload._id;
           delete payload._id;
@@ -119,60 +136,86 @@ module.exports = function(env) {
               sets += ','
             }
             i++;
-            sets += property + '=' + payload[property];
+            var value = payload[property];
+            if(isNaN(value)){
+              value = '\'' + value + '\'';
+            }
+
+            sets += property + '=' + value;
           }
         }
-        var sql = 'UPDATE ' + name + sets + ' WHERE _id=' + _id;
-        pg.connect(env.connectionString, function(err, client, done) {
-          client.query(sql, function(err, result) {
-            done();
-            var ret = {};
-            if (err) {
-              console.error(err);
-              res.send("Error " + err);
-            }
-            else {
-              pg.findById(name, _id, res);
-            }
+        var sql = 'UPDATE ' + name + ' ' + sets + ' WHERE _id=' + _id;
+        console.log(sql);
+        return new Promise((resolve, reject) => {
+          pg.connect(connectionString, function(err, client, done) {
+            client.query(sql, function(err, result) {
+              done();
+              var ret = {};
+              if (err) {
+                console.error(err);
+                resolve(err);
+              }
+              else {
+                findById(name, _id, res).then((val)=>{
+                  console.log('after put ' + JSON.stringify(val));
+                  if(val.users && val.users.length > 0){
+                    resolve(val.users[0]);
+                  } else {
+                    resolve(val);
+                  }
+
+                })
+              }
+            });
           });
         });
 
       } else {
-        var obj = {};
-        obj[name] = '';
-        res.send(obj);
+        return new Promise((resolve, reject) => {
+          var obj = {};
+          obj[name] = '';
+          resolve(obj);
+        });
       }
     },
 
     post: function(name, res, req) {
       if (req.body && req.body[name]) {
-
         var payload = req.body[name];
-        var sql = insertSql(payload);
-        pg.connect(env.connectionString, function(err, client, done) {
-          client.query(sql, function(err, result) {
-            done();
-            var ret = {};
-            if (err) {
-              console.error(err);
-              res.send("Error " + err);
-            }
-            else {
-              pg.findById(name, _id, res);
-            }
+
+        console.log('post ad: ' + JSON.stringify(req));
+        var sql = insertSql(name, payload);
+        return new Promise((resolve, reject) => {
+          pg.connect(connectionString, function(err, client, done) {
+            client.query(sql, function(err, result) {
+              done();
+              var ret = {};
+              if (err) {
+                console.error(err);
+                resolve(err);
+              }
+              else {
+                console.log('after post ' + JSON.stringify(result));
+                  if(result.rows && result.rows.length > 0){
+                    resolve(result.rows[0]);
+                  } else {
+                    resolve(result);
+                  }
+              }
+            });
           });
         });
 
       } else {
         var obj = {};
         obj[name] = '';
-        res.send(obj);
+        if(res) res.send(obj);
       }
     },
 
     delete: function(name, id, res) {
       console.log(`delete : name-${name}, id-${id}`);
-      pg.connect(env.connectionString, function(err, client, done) {
+      pg.connect(connectionString, function(err, client, done) {
         if (id) {
           let queryString = `DELETE FROM ${name}`;
           if (id) {
@@ -183,10 +226,10 @@ module.exports = function(env) {
             var ret = {};
             if (err) {
               console.error(err);
-              res.send("Error " + err);
+              if(res) res.send("Error " + err);
             }
             else {
-              res.send((result === 1) ? {} : {msg: 'error: ' + err});
+              if(res) res.send((result === 1) ? {} : {msg: 'error: ' + err});
             }
           });
         }
@@ -194,15 +237,15 @@ module.exports = function(env) {
     },
 
     clean: function(data, res) {
-
-      pg.connect(env.connectionString, function(err, client, done) {
+      console.log(JSON.stringify(data));
+      pg.connect(connectionString, function(err, client, done) {
         data.forEach(function(table) {
           var sql = 'DELETE FROM ' + table.name;
           client.query(sql, function(err, result) {
             var ret = {};
             if (err) {
               console.error(err);
-              res.send("Error " + err);
+              if(res) res.send("Error " + err);
               done();
             }
             else {
@@ -217,7 +260,7 @@ module.exports = function(env) {
     },
 
     insertAll: function(data, res) {
-      pg.connect(env.connectionString, function(err, client, done) {
+      pg.connect(connectionString, function(err, client, done) {
         data.forEach(function(table) {
             table.data.forEach(function(data) {
               console.log(JSON.stringify(data));
@@ -227,7 +270,7 @@ module.exports = function(env) {
                 var ret = {};
                 if (err) {
                   console.error(err);
-                  res.send("Error " + err);
+                  if(res) res.send("Error " + err);
                   done();
                 } else {
                   console.log('inserted : ' + sql);

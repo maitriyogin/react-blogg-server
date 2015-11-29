@@ -3,15 +3,23 @@ module.exports = function(app, adapter) {
   var postsRouter = express.Router();
 
   postsRouter.get('/', function(req, res) {
-    adapter.find('posts', req.query, res);
+    adapter.find('posts', req.query, res).then((val)=>{
+      res.send(val)
+    }).catch((val)=>{
+      res.send(val)
+    });
   });
 
   postsRouter.get('/:id?', function(req, res) {
-    adapter.findById('posts',req.params.id, res);
+    adapter.findById('posts',req.params.id, res).then((val)=>{
+      res.send(val)
+    });
   });
 
   postsRouter.post('/', function(req, res) {
-    adapter.post('posts', res, req.body.post);
+    adapter.post('posts', res, req.body.post).then((val)=>{
+      res.send(val)
+    });
   });
 
   postsRouter.delete('/:id', function(req, res) {
@@ -19,7 +27,9 @@ module.exports = function(app, adapter) {
   });
 
   postsRouter.put('/:id', function(req, res) {
-    adapter.put('posts',  res, req);
+    adapter.put('posts',  res, req).then((val)=>{
+      res.send(val)
+    });
   });
 
   app.use('/api/posts', postsRouter);
