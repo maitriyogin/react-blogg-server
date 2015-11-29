@@ -17,6 +17,9 @@ module.exports = function() {
   var app = express();
   
   adapter = adapter(env);
+
+  console.log('---------------------');
+  console.log(' env : ' + JSON.stringify(env));
   
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({
