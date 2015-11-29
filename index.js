@@ -1,11 +1,3 @@
-import makeStore from './src/store';
-import startServer from './src/server';
+import startAPIServer from './src/server/serverApi';
 
-export const store = makeStore();
-startServer(store);
-
-// init the store with initial data
-store.dispatch({
-    type: 'SET_DATA',
-    data: require('./data.js')
-});
+startAPIServer();
