@@ -20,7 +20,7 @@ module.exports = function() {
 
   console.log('---------------------');
   console.log(' env : ' + JSON.stringify(env));
-  
+  console.log('---------------------');
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({
     extended: true
