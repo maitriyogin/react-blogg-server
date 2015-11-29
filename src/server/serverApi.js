@@ -3,7 +3,7 @@ var isProduction = process.env.NODE_ENV === 'production';
 var env = {
   isProduction : isProduction,
   port : isProduction ? process.env.PORT : 3001,
-  connectionString : isProduction ? process.env.DATABASE_URL : "pg://stephenwhite:5432@localhost/stephenwhite"
+  connectionString : isProduction ? process.env.DATABASE_URL : "postgres://epsnrnnvupsuur:2tDRMbPZ7QrQeyiE342hVldDmR@ec2-54-83-201-196.compute-1.amazonaws.com:5432/d9l7bj2t8sljkl"
 }
 
 
