@@ -158,8 +158,8 @@ module.exports = function() {
               else {
                 findById(name, _id, res).then((val)=>{
                   console.log('after put ' + JSON.stringify(val));
-                  if(val.users && val.users.length > 0){
-                    resolve(val.users[0]);
+                  if(val[name] && val[name].length > 0){
+                    resolve(val[name][0]);
                   } else {
                     resolve(val);
                   }

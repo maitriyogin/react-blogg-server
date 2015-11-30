@@ -1,5 +1,5 @@
 import * as _ from 'underscore';
-
+import moment from 'moment';
 import {
   GraphQLList,
   GraphQLObjectType,
@@ -39,9 +39,10 @@ const Post = new GraphQLObjectType({
   name: 'Post',
   description: 'Represent the type of a post',
   fields: () => ({
-    _id: {type: GraphQLString},
+    _id: {type: GraphQLInt},
     title: {type: GraphQLString},
     body: {type: GraphQLString},
+    userfk: {type: GraphQLInt},
     user:{
       type:User,
       resolve(parent, args){
@@ -71,9 +72,17 @@ const Comment = new GraphQLObjectType({
   name: 'Comment',
   description: 'Represent the type of a Comment on a post of a User',
   fields: () => ({
-    _id: {type: GraphQLString},
+    _id: {type: GraphQLInt},
     body: {type: GraphQLString},
     updatedate: {type: GraphQLString},
+    userfk: {
+      name: 'userfk',
+      type: GraphQLInt
+    },
+    postfk: {
+      name: 'postfk',
+      type: GraphQLInt
+    },
     user:{
       type:User,
       resolve(parent, args){
@@ -169,7 +178,9 @@ const Query = new GraphQLObjectType({
         body: {
           name: 'body',
           type: GraphQLString
-        }
+        },
+        postfk: {type:GraphQLInt},
+        userfk: {type:GraphQLInt}
       },
       resolve: function(rootValue, args, info) {
         let fields = {};
@@ -228,6 +239,65 @@ const Mutation = new GraphQLObjectType({
         let user = _.clone(args);
         let req = {body:{users:user}};
         return adapter.post('users', null, req).then((auser) => auser);
+      }
+    },
+    updatePost: {
+      type: Post,
+      args: {
+        _id: {
+          name: '_id',
+          type: GraphQLInt
+        },
+        title: {
+          name: 'title',
+          type: GraphQLString
+        },
+        body: {
+          name: 'body',
+          type: GraphQLString
+        },
+        userfk: {
+          name: 'userfk',
+          type: GraphQLInt
+        },
+      },
+      resolve: function(rootValue, args) {
+        let post = _.clone(args);
+        let req = {body:{posts:post}};
+        return adapter.put('posts', null, req).then((apost) => apost);
+      }
+    },
+    addComment: {
+      type: Comment,
+      args: {
+        _id: {
+          name: '_id',
+          type: GraphQLInt
+        },
+        updatedate: {
+          name: 'updatedate',
+          type: GraphQLString
+        },
+        body: {
+          name: 'body',
+          type: GraphQLString
+        },
+        userfk: {
+          name: 'userfk',
+          type: GraphQLInt
+        },
+        postfk: {
+          name: 'postfk',
+          type: GraphQLInt
+        },
+      },
+      resolve: function(rootValue, args) {
+        let comment = _.clone(args);
+        if(!comment.updatedate){
+          comment.updatedate = moment().format();
+        }
+        let req = {body:{comments:comment}};
+        return adapter.post('comments', null, req).then((item) => item);
       }
     }
   }
