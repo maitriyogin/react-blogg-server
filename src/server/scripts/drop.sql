@@ -1,3 +1,3 @@
-DROP TABLE comments;
-DROP TABLE posts;
-DROP TABLE users;
+DROP TABLE comments CASCADE;
+DROP TABLE posts CASCADE;
+DROP TABLE users CASCADE;
