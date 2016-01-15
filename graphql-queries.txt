@@ -1,0 +1,114 @@
+// queries
+query{
+  posts(_id:1){
+    _id,
+    body,
+    title
+  }
+}
+
+// --------- aliases
+query{
+  posts(title:"Sed"){
+    theid :_id,
+    body,
+    title
+  }
+}
+
+query{
+  sedinasPost : posts(title:"Sed"){
+    theid :_id,
+    body,
+    title
+  }
+}
+
+
+query{
+  posts{
+    theid :_id,
+    body,
+    title,
+    user{
+      _id,
+      username
+    }
+  }
+}
+
+
+// ------------------
+query{
+  posts{
+    _id,
+    body,
+    title,
+    user{
+      _id,
+      username,
+      email
+    },
+    comments{
+      body
+    }
+  }
+}
+
+// -------------------
+query{
+  posts{
+    _id,
+    body,
+    title,
+    user{
+      ...userInfo
+    },
+    comments{
+      ...commentInfo
+    }
+  }
+}
+
+fragment userInfo on User {
+  _id,
+  username,
+  email
+}
+
+fragment commentInfo on Comment {
+  body
+}
+
+
+// ---------------------
+mutation{
+  updatePost(_id:1, title:"react rocks!"){
+    _id,
+    title
+  }
+}
+// ---------------------
+mutation{
+    addComment(body:"nasty comment",userfk:1, postfk:1){
+      _id,
+      body,
+      updatedate,
+      userfk,
+      postfk
+    }
+  }
+
+
+// variables
+query findPosts($title:String) {
+  posts(title:$title){
+    title,
+    body
+  }
+}
+
+Query variable
+{
+  "title":"tast"
+}

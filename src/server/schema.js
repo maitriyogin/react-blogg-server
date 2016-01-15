@@ -153,6 +153,10 @@ const Query = new GraphQLObjectType({
         body: {
           name: 'body',
           type: GraphQLString
+        },
+        userfk: {
+          name: 'userfk',
+          type: GraphQLInt
         }
       },
       resolve: function(rootValue, args, info) {

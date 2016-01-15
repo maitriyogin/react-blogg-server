@@ -50,3 +50,6 @@ mutation{
       updatedate
     }
   }
+
+
+curl -XPOST -H 'Content-Type:application/graphql'  -d '{posts{_id,title}}' https://react-blogg-server.herokuapp.com/graphql
