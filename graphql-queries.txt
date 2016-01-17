@@ -80,6 +80,38 @@ fragment commentInfo on Comment {
   body
 }
 
+----
+query{
+  users(_id:1){
+    comments{
+    	...commentInfo
+    }
+  }
+}
+
+fragment commentInfo on Comment{
+  body,
+  post {
+    title
+  }
+}
+
+
+query findPost($title:String){
+  posts(title:$title){
+    title,
+    body ...postBody
+  }
+}
+
+fragment postBody on Post{
+  body
+}
+
+{
+  "title": "react"
+}
+
 
 // ---------------------
 mutation{
@@ -101,6 +133,19 @@ mutation{
 
 
 // variables
+query findUser($username:String){
+  users(username:$username){
+    username
+    comments{
+    	...commentInfo
+    }
+  }
+}
+
+{
+  "username" : "step"
+}
+
 query findPosts($title:String) {
   posts(title:$title){
     title,

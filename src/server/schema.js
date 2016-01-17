@@ -11,8 +11,10 @@ import {
   GraphQLNonNull
 } from 'graphql';
 
+// --------------------------------- Adapter
 const adapter = require('./adapter')();
 
+// --------------------------------- Types
 const User = new GraphQLObjectType({
   name: 'User',
   description: 'Represent the type of a user of a blog post or a comment',
@@ -29,6 +31,16 @@ const User = new GraphQLObjectType({
           var posts = posts && posts.posts ? posts.posts : null;
           console.log(JSON.stringify(posts));
           return posts;
+        })
+      }
+    },
+    comments: {
+      type: new GraphQLList(Comment),
+      resolve(parent, args){
+        var query = {userfk:parent._id};
+        return adapter.find('comments', query).then((comments)=>{
+          var comments = comments && comments.comments ? comments.comments : null;
+          return comments;
         })
       }
     }
@@ -107,10 +119,13 @@ const Comment = new GraphQLObjectType({
   })
 });
 
+// --------------------------------- Queries
 const Query = new GraphQLObjectType({
   name: "Queries",
+  description:"The queries supported are for users, posts and comments this should live update",
   fields: {
     users: {
+      description:"Users query. Arguments supported are _id, username, email.  All String queries are wildcard queries %%",
       type: new GraphQLList(User),
       args: {
         _id: {
@@ -140,6 +155,7 @@ const Query = new GraphQLObjectType({
       }
     },
     posts: {
+      description:"Posts query. Arguments supported are _id, title, body, userfk.  All String queries are wildcard queries %%",
       type: new GraphQLList(Post),
       args: {
         _id: {
@@ -173,6 +189,7 @@ const Query = new GraphQLObjectType({
       }
     },
     comments: {
+      description:"Comments query. Arguments supported are _id, body.  All String queries are wildcard queries %%",
       type: new GraphQLList(Comment),
       args: {
         _id: {
@@ -202,11 +219,14 @@ const Query = new GraphQLObjectType({
   }
 });
 
+// --------------------------------- Mutations
 const Mutation = new GraphQLObjectType({
   name: "Mutations",
+  description:"There's some basic mutations for updating/creating a user, updating a post, and adding comments to a post.",
   fields: {
     updateUser: {
       type: User,
+      description:"Update user is used to mutate a user.",
       args: {
         _id: {
           name: '_id',
@@ -229,6 +249,7 @@ const Mutation = new GraphQLObjectType({
     },
     createUser: {
       type: User,
+      description:"Create user is used to create a user.",
       args: {
         username: {
           name: 'username',
@@ -247,6 +268,7 @@ const Mutation = new GraphQLObjectType({
     },
     updatePost: {
       type: Post,
+      description:"Update post is used to update a post",
       args: {
         _id: {
           name: '_id',
@@ -273,6 +295,7 @@ const Mutation = new GraphQLObjectType({
     },
     addComment: {
       type: Comment,
+      description:"Add comment is used to ammend comments to a post",
       args: {
         _id: {
           name: '_id',
@@ -308,6 +331,7 @@ const Mutation = new GraphQLObjectType({
 });
 
 const Schema = new GraphQLSchema({
+  description:'GraphQL implementation of a basic bloggs schema, users, posts, comments',
   query: Query,
   mutation: Mutation
 });
